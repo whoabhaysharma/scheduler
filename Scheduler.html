@@ -1,0 +1,434 @@
+<!doctype html>
+<html>
+<head>
+    <meta name="layout" content="xenon"/>
+    <title>Survey</title>
+
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Arimo:400,700,400italic">
+	<link rel="stylesheet" href="../assets/css/fonts/linecons/css/linecons.css">
+	<link rel="stylesheet" href="../assets/css/fonts/fontawesome/css/font-awesome.min.css">
+	<link rel="stylesheet" href="../assets/css/bootstrap.css">
+	<link rel="stylesheet" href="../assets/css/xenon-core.css">
+	<link rel="stylesheet" href="../assets/css/xenon-forms.css">
+	<link rel="stylesheet" href="../assets/css/xenon-components.css">
+	<link rel="stylesheet" href="../assets/css/xenon-skins.css">
+	<link rel="stylesheet" href="../assets/css/custom.css">
+
+	<script src="../assets/js/jquery-1.11.1.min.js"></script>
+   
+ 
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
+</head>
+
+<body>
+
+<style>
+    .timeline-container {
+        padding: 10px;
+        background-color: white;
+    }
+
+    .timeline-draggable-container{
+        position: relative;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        background-color: white;
+        align-items: center;
+    }
+    .timeline-draggable-container .interactivity-row-container{
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        align-items: center;
+        justify-content: center;
+    }
+    .timeline-draggable-container .row{
+        display: flex;
+        width: 100%;
+        flex-direction: row;
+        border: 1px solid #DDDFE5;
+    }
+    .timeline-draggable-container .row .row-name{
+        display: flex;
+        flex: 1;
+        border-right: 1px solid #DDDFE5;
+        align-items: center;
+        justify-content: center;
+        padding: 2px 0;
+    }
+    .timeline-draggable-container .row .row-draggable{
+        flex: 6;
+    }
+    .resize-draggable{
+        height: 100%;
+        width: 100px;
+        border: 1px solid black;
+        border-left: 5px solid #005A8D;
+    }
+
+    .resize-draggable.non-linear{
+        border-right: 5px solid #005A8D;
+    }
+
+    .timeline-draggable-container .draggable{
+        cursor: move;
+    }
+    .timeline-marker-hover {
+        position: absolute;
+        height: 100%;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: black;
+    }
+
+    .timeline-marker-hover > span{
+        position: absolute;
+        top: -20px;
+        right: -40px;
+        width: 80px;
+        height: 20px;
+        background: rgba(0,0,0,0.2);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .timeline-marker-fixed {
+        position: absolute;
+        height: 100%;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: black;
+    }
+
+    .timeline-marker-fixed:before{
+        content: '';
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        width: 12px;
+        height: 12px;
+        -webkit-border-radius: 25px;
+        -moz-border-radius: 25px;
+        border-radius: 25px;
+        background: #4da6ff;
+    }
+
+    .timeline-draggable-container .timeline-time{
+        display: flex;
+        width: 100%;
+        flex-direction: row;
+    }
+
+    .timeline-draggable-container .timeline-time > div:first-child{
+        display: flex;
+        flex: 1;
+    }
+    .timeline-draggable-container .timeline-time > div:last-child{
+        display: flex;
+        flex: 6;
+        justify-content: space-between;
+        cursor: default;
+        padding: 10px 0;
+    }
+    .addInteractivityOption{
+        display: flex;
+        flex-direction: row;
+        margin-bottom: 30px;
+    }
+
+    .addInteractivityOption > div{
+        padding: 5px 10px;
+        background-color: #8299B5;
+        color: white;
+        margin-right: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .addInteractivityOption > div:after{
+        content: '+';
+        margin: 0 5px;
+    }
+</style>
+<div class="row">
+    <div class="col-md-6">
+        <div class="panel-default">
+            <div class="panel-body">
+                <form role="form" class="form-horizontal" action="${createLink(controller: "survey", action: "${actionName == 'createTemplate' ? 'saveTemplate' : 'save'}")}" method="post">
+                    <g:hiddenField name="orgId" value="${params.orgId}"/>
+                    <g:hiddenField name="id" value="${survey?.id}"/>
+                    <g:hiddenField id="surveyJson" name="surveyJson" value=""/>
+                    <div class="form-group">
+                        <label class="col-md-12" for="name">Name:</label>
+                        <div class="col-md-12">
+                            <input name="name" type="text" id="name" value="${survey?.name}"
+                                   placeholder="Enter Survey Name"  class="form-control" required />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="panel-group" id="interactivitiesContainer">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">
+                                        <a data-toggle="collapse" data-parent="#interactivitiesContainer" href="#123"
+                                           class="fa collapsed accordion-head" >
+                                            CTA Card
+                                        </a>
+                                    </h4>
+                                    <div style="position: absolute;right: 27px;top: 0; margin-left: 20px">
+                                        <i class="fa fa-trash removeQue"></i>
+                                    </div>
+                                </div>
+
+                                <div id="123" class="panel-collapse collapse accordion-body">
+                                    <div class="panel-body">
+                                        <div class="form-group">
+                                            <label class="col-sm-12 control-label">CTA Cards</label>
+                                            <div class="col-sm-12">
+                                                <select name="ctaCard" class="form-control">
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-sm-12">
+                                                <div class="col-sm-6">
+                                                    <label class="col-sm-12 control-label">Start Time</label>
+                                                    <div class="col-sm-12">
+                                                        <div class="col-sm-3">
+                                                            <input name="name" type="text"  class="form-control" required />
+                                                        </div>
+                                                        <label class="col-sm-3 control-label">Min</label>
+                                                        <div class="col-sm-3">
+                                                            <input name="name" type="text"  class="form-control" required />
+                                                        </div>
+                                                        <label class="col-sm-3 control-label">Sec</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <label class="col-sm-12 control-label">End Time</label>
+                                                    <div class="col-sm-12">
+                                                        <div class="col-sm-3">
+                                                            <input name="name" type="text"  class="form-control" required />
+                                                        </div>
+                                                        <label class="col-sm-3 control-label">Min</label>
+                                                        <div class="col-sm-3">
+                                                            <input name="name" type="text"  class="form-control" required />
+                                                        </div>
+                                                        <label class="col-sm-3 control-label">Sec</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">
+                                        <a data-toggle="collapse" data-parent="#interactivitiesContainer" href="#22"
+                                           class="fa collapsed accordion-head" >
+                                            AD Tag
+                                        </a>
+                                    </h4>
+                                    <div style="position: absolute;right: 27px;top: 0; margin-left: 20px">
+                                        <i class="fa fa-trash removeQue"></i>
+                                    </div>
+                                </div>
+
+                                <div id="22" class="panel-collapse collapse accordion-body">
+                                    <div class="panel-body">
+                                        <div class="form-group">
+                                            <label class="col-sm-12 control-label">Ad Tags</label>
+                                            <div class="col-sm-12">
+                                                <select name="ctaCard" class="form-control"></select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-sm-12">
+                                                <div class="col-sm-6">
+                                                    <label class="col-sm-12 control-label">Start Time</label>
+                                                    <div class="col-sm-12">
+                                                        <div class="col-sm-3">
+                                                            <input name="name" type="text"  class="form-control" required />
+                                                        </div>
+                                                        <label class="col-sm-3 control-label">Min</label>
+                                                        <div class="col-sm-3">
+                                                            <input name="name" type="text"  class="form-control" required />
+                                                        </div>
+                                                        <label class="col-sm-3 control-label">Sec</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="panel panel-default" style="height: 521px">
+        </div>
+    </div>
+
+</div>
+
+<div class="timeline-container">
+    <div style="height: 50px; background-color: white; width: 100%"></div>
+    <div class="addInteractivityOption"></div>
+    <div class="timeline-draggable-container">
+        <div class="interactivity-row-container">
+            <div class="row adManageTagRow">
+                <div class="row-name">Ad Manager Tag</div>
+                <div class="row-draggable"></div>
+            </div>
+            <div class="row vastTagRow">
+                <div class="row-name">Vast Tag</div>
+                <div class="row-draggable"></div>
+            </div>
+            <div class="row ctaCardRow">
+                <div class="row-name">ctaCard</div>
+                <div class="row-draggable"></div>
+            </div>
+            <div class="row formRow">
+                <div class="row-name formRow">Form</div>
+                <div class="row-draggable"></div>
+            </div>
+            <div class="row surveyRow">
+                <div class="row-name">Survey</div>
+                <div class="row-draggable"></div>
+            </div>
+        </div>
+        <div class="timeline-time">
+            <div></div>
+            <div class="time"></div>
+        </div>
+        <div class="timeline-marker-hover">
+            <span></span>
+        </div>
+        <div class="timeline-marker-fixed"></div>
+    </div>
+</div>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script src="../assets/js/moment.min.js"></script>
+<script>
+
+    let interactivityType = {
+        "adManageTag": {
+            label: "Ad Manager Tag",
+            isLinear: true
+        },
+        "vastTag": {
+            label: "Vast Tag",
+            isLinear: true
+        },
+        "ctaCard": {
+            label: "CTA Card",
+            isLinear: false
+        },
+        "form": {
+            label: "Form",
+            isLinear: true
+        },
+        "survey": {
+            label: "Survey",
+            isLinear: true
+        }
+       
+    }
+    updateAddInteractivityBtn()
+    function updateAddInteractivityBtn(){
+        for(let key in interactivityType){
+            $(".addInteractivityOption").append("<div data-type="+key+">"+interactivityType[key].label+"</div>")
+        }
+    }
+
+    $(".addInteractivityOption div").click(function (){
+        let type = $(this).data("type")
+        let typeLabel = interactivityType[type].label
+        let nonLinearClass = interactivityType[type].isLinear ? "" : "non-linear"
+        let dummyHtml = '<div class="resize-draggable draggable resize butNotHere '+nonLinearClass+'"></div>'
+        $(".interactivity-row-container ."+type+"Row > .row-draggable").append(dummyHtml)
+        updateDraggableAndResize()
+    })
+
+    let videoDuration = 120
+    function updateDraggableAndResize(){
+        $(".resize-draggable").each(function (i, obj){
+            let resizeHandle = $(obj).hasClass("non-linear") ? "e,w" : "w"
+            $(obj).draggable({
+                containment: "parent",
+                obstacle:".butNotHere",
+                preventCollision: true,
+                start: function(event,ui) {
+                    $(this).removeClass('butNotHere');
+                },
+                stop: function(event,ui) {
+                    $(this).addClass('butNotHere');
+                }
+            }).resizable({
+                containment: "parent",
+                handles: resizeHandle
+            });
+        })
+    }
+
+    $(document).on('mousemove', '.timeline-time div', e => {
+        let leftDist = $(".row-draggable")[0].getBoundingClientRect().left
+        let rowName = $(".row-name").width()
+        let leftPosition = e.clientX - leftDist
+        leftPosition = leftPosition > 0 ? leftPosition : 0
+        $(".timeline-marker-hover").show().css({left: (leftPosition + rowName) + 'px'})
+
+        let markerLeftPositionPer = (leftPosition / $(".timeline-time .time").width()) * 100
+        let movableMarkerTime = (videoDuration * markerLeftPositionPer) / 100
+        let timeInFormat = moment.utc(movableMarkerTime*1000).format('HH:mm:ss')
+        $('.timeline-marker-hover > span').text(timeInFormat); //anything is the 'content' value
+    })
+
+    $(".timeline-time, .timeline-time div").mouseleave(e => {
+        $(".timeline-marker-hover").hide()
+    })
+
+    $(document).on('click touchend', '.row-draggable, .timeline-time, .timeline-time div', e => {
+        let leftDist = $(".row-draggable")[0].getBoundingClientRect().left
+        let rowName = $(".row-name").width()
+        let leftPosition = e.clientX - leftDist + rowName
+        $(".timeline-marker-fixed").css({left: leftPosition + 'px'})
+    })
+
+    updateTimeLine(videoDuration)
+    function updateTimeLine(duration){
+        let timeLineRef = $(".timeline-draggable-container .timeline-time .time")
+        timeLineRef.empty()
+        timeLineRef.append("<div>00:00:00</div>")
+        for (let i =1; i<=4; i++){
+            let slotTime = (duration*i)/4
+            console.log('slotTime:: ',slotTime)
+            let timeInFormat = moment.utc(slotTime*1000).format('HH:mm:ss');
+            timeLineRef.append("<div>"+timeInFormat+"</div>")
+        }
+    }
+</script>
+
+<script src="../assets/js/bootstrap.min.js"></script>
+<script src="../assets/js/TweenMax.min.js"></script>
+<script src="../assets/js/resizeable.js"></script>
+<script src="../assets/js/joinable.js"></script>
+<script src="../assets/js/xenon-api.js"></script>
+<script src="../assets/js/xenon-toggles.js"></script>
+
+
+<!-- JavaScripts initializations and stuff -->
+<script src="../assets/js/xenon-custom.js"></script>
+</body>
+</html>
